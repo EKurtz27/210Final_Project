@@ -169,14 +169,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let node_cliques = data_analysis::u32_cliques_to_node_cliques(
         "twitch_data/ENGB/musae_ENGB_target.csv", sorted_cliques).unwrap();
 
-    println!("Clique nodes:");
-    for node in &node_cliques[0] {
-        println!("{:?}", node)
-    }
-
     let viewership_dists = data_analysis::viewership_distribution(&node_cliques);
-    println!("Distribution for Clique 1: {:?}", viewership_dists[0]);
-    println!("Total: {}", viewership_dists[0].iter().sum::<f32>());
+
+    data_analysis::plot_viewership_distributions(viewership_dists);
+
     Ok(())
 }
 
