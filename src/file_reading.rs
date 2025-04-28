@@ -17,11 +17,3 @@ pub fn csv_to_hashmap (path: &str) -> Result<HashMap<u32, HashSet<u32>>, Box<dyn
 
    return Ok(map)
 }
-
-pub fn find_connected_node (map: &HashMap<u32, HashSet<u32>>) -> Option<u32> {
-    if let Some((key, _values)) = map.iter().max_by_key(|(_, v)| v.len()) {
-        Some(*key)
-    } else {
-        None
-    }
-}
