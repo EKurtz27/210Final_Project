@@ -106,7 +106,7 @@ for (k, v) in graph.iter() {
 fn test_alg_largescale() {
     use copied_alg;
     use file_reading;
-    use std::collections::{HashSet};
+    use std::collections::HashSet;
 
     // Handle the Result returned by csv_to_hashmap
     let graph_result = file_reading::csv_to_hashmap(
