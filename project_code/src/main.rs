@@ -49,7 +49,6 @@ fn bron_kerbosch(
 /// Found a definitive Bron-Kerbosch algorith online, checking if the two version give the same result
 /// Definitive algorithm can be found at https://rosettacode.org/wiki/Bron%E2%80%93Kerbosch_algorithm#Rust
 /// Code in "copied_alg" module
-
 #[test]
 fn test_alg_smallscale() {    
     use copied_alg;
@@ -175,6 +174,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("{:?}", node)
     }
 
+    let viewership_dists = data_analysis::viewership_distribution(&node_cliques);
+    println!("Distribution for Clique 1: {:?}", viewership_dists[0]);
+    println!("Total: {}", viewership_dists[0].iter().sum::<f32>());
     Ok(())
 }
 
