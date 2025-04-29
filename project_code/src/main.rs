@@ -10,10 +10,10 @@ fn bron_kerbosch(
     x: &mut HashSet<u32>,
     graph: &HashMap<u32, HashSet<u32>>,
     cliques: &mut Vec<Vec<u32>>,
-    min_value: usize
+    min_value: u32
 ) {
     if p.is_empty() && x.is_empty() {
-        if r.len() >= min_value { //Only save cliques of 5 or greater to reduce output to relevant options
+        if r.len() >= min_value as usize { //Only save cliques of 5 or greater to reduce output to relevant options
             let mut clique: Vec<u32> = r.clone().into_iter().collect();
             clique.sort();
             cliques.push(clique);
@@ -157,7 +157,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut x: HashSet<u32> = HashSet::new();
 
     let mut cliques: Vec<Vec<u32>> = Vec::new();
-    bron_kerbosch(&r, &mut p, &mut x, &graph, &mut cliques, 10);
+    let min_value: u32 = 10;
+    bron_kerbosch(&r, &mut p, &mut x, &graph, &mut cliques, min_value);
 
     // Sort the cliques for consistent output
     let mut sorted_cliques = cliques.clone();

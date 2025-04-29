@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-
+#[allow(dead_code)]
 pub fn bron_kerbosch_v2(
     r: &HashSet<u32>,
     p: &mut HashSet<u32>,
