@@ -1,3 +1,5 @@
+//! Module containing a verified version of the Bron-Kerbosch algorithm, for comparison to manually created algorithm in tests.
+
 use std::collections::{HashMap, HashSet};
 #[allow(dead_code)]
 pub fn bron_kerbosch_v2(
