@@ -31,33 +31,38 @@ where
 /// remake the cliques using NodeStats objects for further data analysis \
 ///  # Example
 /// **Input:** vector of vectors containing u32s such as \[1, 2, 3\] \
-/// For each number, read the target.csv file with Serde deserialization \
+/// The target.csv file is loaded into a vector with Serde deserialization \
+/// For each node_id in the input vectors, this vector is referenced to find the matching NodeStruct \
 /// When matching node is found (new_id == number), add deserialized NodeStats to new vector\
 /// **Output:** vector of vector containing NodeStat objects such as \[NodeStat1, NodeStats2, NodeStats3\] \
 /// 
 /// **Note**  
 /// Code has large computational complexity due to nested loops, a large number of cliques may take significant time \
-/// Current code uses a min_value of 10 to get 14 cliques, for lower minimum values, this code may need to be optimized further
+/// Current code uses a min_value of 10 to get 14 cliques, for lower minimum values, this code may need to be optimized further \
+/// **Possible optimization (ran out of time):** collecting ids from target csv as a Vec<u32> with a reader, 
+/// then using that vec to find the row index for each clique node, and calling reader directly to that row. \
+/// Requires loading the bit offset to have the reader find specific rows, too technical at the moment
 pub fn u32_cliques_to_node_cliques(path: &str, cliques: Vec<Vec<u32>>) -> Result<Vec<Vec<NodeStats>>, csv::Error> {
+    let mut loaded_file: Vec<NodeStats> = Vec::new();
+    let mut index_rdr = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .from_path(path)?;
+    for result in index_rdr.deserialize::<NodeStats>() {
+        match result {
+            Ok(record) => {
+                loaded_file.push(record)
+            }
+            Err(err) => eprintln!("Error deserializing csv: {}", err)
+        }
+    }
+    // Continue rework here
     let mut node_cliques: Vec<Vec<NodeStats>> = Vec::new(); 
     for clique in cliques {
         let mut node_clique: Vec<NodeStats> = Vec::new();
-        for node in clique { 
-            let mut rdr = csv::ReaderBuilder::new() // Build reader from give path (target.csv file)
-            .has_headers(true) // target.csv files have a header
-            .from_path(path)?;
-            for result in rdr.deserialize::<NodeStats>() {
-                match result {
-                    Ok(record) => {
-                        if record.new_id == node {
-                            node_clique.push(record) // Finds the record that matches each node, adds it to a vector to reconstruct Vec<Vec<>> format
-                        }
-                    }
-                    Err(err) => eprintln!("Error deserializing csv: {}", err)
-                }
-
-            }
-            
+        for node_id in clique { 
+            if let Some(matching_node) = loaded_file.iter().find(|node| node.new_id == node_id) {
+                node_clique.push(matching_node.clone())
+            }            
         }
         node_cliques.push(node_clique) // Pushes a Vec<NodeStats> onto another vector
     }
@@ -71,13 +76,13 @@ pub fn u32_cliques_to_node_cliques(path: &str, cliques: Vec<Vec<u32>>) -> Result
 pub fn viewership_distribution (cliques: &Vec<Vec<NodeStats>>) -> Vec<Vec<(u32, f32)>> {
     let mut all_view_dists = Vec::new();
     for clique in cliques {
-        let sum = clique.iter().fold(0, |acc, node| acc + node.views);
+        let sum = clique.iter().fold(0, |acc, node| acc + node.views); // Accumulates all nodes' view field into a sum for the clique
         let mut clique_viewership_dist = Vec::new();
         for node in clique {
-            let node_views_percent: f32 = node.views as f32 / sum as f32;
-            clique_viewership_dist.push((node.new_id, node_views_percent));
+            let node_views_percent: f32 = node.views as f32 / sum as f32; // Finds the % each node contributes to the cliques total viewership
+            clique_viewership_dist.push((node.new_id, node_views_percent)); // Pushes the node's id and its percentage to the vector for that clique
         }
-        all_view_dists.push(clique_viewership_dist);
+        all_view_dists.push(clique_viewership_dist); // Pushes each clique vector to the output vector
     }
     return all_view_dists
 }

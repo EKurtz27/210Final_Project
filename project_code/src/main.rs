@@ -15,6 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut cliques: Vec<Vec<u32>> = Vec::new();
     let min_value: u32 = 10;
+    
     bron_kerbosch::run_bron_kerbosch(&r, &mut p, &mut x, &graph, &mut cliques, min_value); // Runs the Bron-Kerbosch algorithm to find cliques of at least 10
 
     // Sort the cliques for consistent output

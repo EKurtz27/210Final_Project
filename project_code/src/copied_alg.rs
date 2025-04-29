@@ -1,6 +1,9 @@
-//! Module containing a verified version of the Bron-Kerbosch algorithm, for comparison to manually created algorithm in tests.
+//! Module containing a verified version of the Bron-Kerbosch algorithm, for comparison to manually created algorithm in tests. Seperated for clarity.
 
 use std::collections::{HashMap, HashSet};
+/// Verifed algorithm from [Rosetta Code], used to ensure my implementation works correctly
+/// 
+/// [Rosetta Code]: https://rosettacode.org/wiki/Bron%E2%80%93Kerbosch_algorithm#Rust
 #[allow(dead_code)]
 pub fn bron_kerbosch_v2(
     r: &HashSet<u32>,
