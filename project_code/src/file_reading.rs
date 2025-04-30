@@ -1,7 +1,6 @@
 //! Module for reading the csv files for both the graph edges and node statistics
 use std::collections::HashMap;
 use std::collections::HashSet;
-use csv::Reader;
 use std::error::Error;
 use crate::data_analysis::NodeStats;
 
