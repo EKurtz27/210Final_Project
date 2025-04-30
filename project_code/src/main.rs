@@ -26,18 +26,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "../twitch_data/RU/musae_RU_target.csv"
     ];
     // Input for setting region/language
-    let mut input = String::new();
+    let mut lang_input = String::new();
     println!("Input a number for the language you'd like to see data analyzed for:");
     println!("0: German, 1: British English, 2: Spanish, 3: French, 4: Brazilian Portuguese, 5: Russian"); // Prompts user for input
-    io::stdin().read_line(&mut input).expect("Failure to read input");
-    let region_choice  = input.trim().parse::<usize>().expect("Please select from the numbers provided"); // Sets region/language
+    io::stdin().read_line(&mut lang_input).expect("Failure to read input");
+    let region_choice  = lang_input.trim().parse::<usize>().expect("Please select from the numbers provided"); // Sets region/language
 
     // Input for setting minimum value
-    let mut input = String::new();
+    let mut min_input = String::new();
     println!("Please enter the minimum size you'd like each saved clique to be:"); // Prompts user for input
     println!("Note that lower numbers equals more computation time and more image files created");
-    io::stdin().read_line(&mut input).expect("Failure to read input");
-    let min_value  = input.trim().parse::<u32>().expect("Please select from the numbers provided"); // Sets minimum threshold
+    io::stdin().read_line(&mut min_input).expect("Failure to read input");
+    let min_value  = min_input.trim().parse::<u32>().expect("Please select from the numbers provided"); // Sets minimum threshold
 
 
     let graph = file_reading::csv_to_hashmap(edge_file_options[region_choice])?; // Creates the undirected graph
@@ -55,14 +55,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     sorted_cliques.sort();
 
     println!("Found {} cliques of at least size {}", sorted_cliques.len(), min_value);
-    println!("Creating {} image files of 16 charts each", (sorted_cliques.len() as f32 / 16.0).ceil());
+    println!("This will create {} image files of at most 16 charts each", (sorted_cliques.len() as f32 / 16.0).ceil());
+    println!("Would you like to continue? (y/n)");
+    let mut continue_input = String::new();
+    io::stdin().read_line(&mut continue_input).expect("Failure to read input");
+    let keep_going  = continue_input.trim().to_string(); // confirms if the user wants to continue
 
-    let node_cliques = file_reading::load_target_file_replace_u32_cliques( // Replaces the u32 cliques with NodeStats cliques 
-        target_file_options[region_choice], sorted_cliques).unwrap(); // Possible branching from here for more analysis
+    if keep_going == "y".to_string() {   
 
-    let viewership_dists = data_analysis::viewership_distribution(&node_cliques); // Finds the viewership distributions for each clique
+        let node_cliques = file_reading::load_target_file_replace_u32_cliques( // Replaces the u32 cliques with NodeStats cliques 
+            target_file_options[region_choice], sorted_cliques).unwrap(); // Possible branching from here for more analysis
 
-    data_analysis::plot_viewership_distributions(viewership_dists); // Generates the viewership_distributions.png file
+        let viewership_dists = data_analysis::viewership_distribution(&node_cliques); // Finds the viewership distributions for each clique
 
+        data_analysis::plot_viewership_distributions(viewership_dists); // Generates the viewership_distributions.png file
+    
+    }
+    else {
+        println!("'y' was not selected, analysis will not progress. Please rerun the project to try again.")
+    }
     Ok(())
 }
