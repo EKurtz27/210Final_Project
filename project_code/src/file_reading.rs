@@ -9,7 +9,9 @@ use crate::data_analysis::NodeStats;
 /// The HashMap functions as a **undirected** graph for further use
 pub fn csv_to_hashmap (path: &str) -> Result<HashMap<u32, HashSet<u32>>, Box<dyn Error>> {
     let mut map: HashMap<u32, HashSet<u32>> = HashMap::new(); 
-    let mut rdr = Reader::from_path(path)?; // Build reader from path given as an argument
+    let mut rdr = csv::ReaderBuilder::new()
+    .has_headers(true) // edges file does not have a header
+    .from_path(path)?; // Build reader from path given as an argument
     for result in rdr.records() {
      let record = result?;
      let start_node = record.get(0).unwrap().parse::<u32>()?; // Parse both columns per row as u32
@@ -29,13 +31,13 @@ pub fn csv_to_hashmap (path: &str) -> Result<HashMap<u32, HashSet<u32>>, Box<dyn
  }
 
 /// Once cliques are found using Bron_Kerbosch on u32 values (computationally faster),
-/// remake the cliques using NodeStats objects for further data analysis \
+/// remake the cliques using NodeStats structs for further data analysis \
 ///  ### Example
 /// **Input:** vector of vectors containing u32s such as \[1, 2, 3\] \
 /// The target.csv file is loaded into a vector with Serde deserialization \
 /// For each node_id in the input vectors, this vector is referenced to find the matching NodeStruct \
 /// When matching node is found (new_id == number), add deserialized NodeStats to new vector\
-/// **Output:** vector of vector containing NodeStat objects such as \[NodeStat1, NodeStats2, NodeStats3\] \
+/// **Output:** vector of vector containing NodeStat structs such as \[NodeStat1, NodeStats2, NodeStats3\] \
 /// 
 /// **Note**  
 /// Code has large computational complexity due to nested loops, a large number of cliques may take significant time \
@@ -68,4 +70,71 @@ pub fn load_target_file_replace_u32_cliques(path: &str, cliques: Vec<Vec<u32>>) 
         node_cliques.push(node_clique) // Pushes a Vec<NodeStats> onto another vector
     }
     Ok(node_cliques)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    /// Test reading of the edge files using temporary files
+    #[test]
+    fn test_edge_reading () {
+        let mut temp_edge_file = NamedTempFile::new().unwrap();
+        writeln!(temp_edge_file, "from,to").unwrap();
+        writeln!(temp_edge_file, "1,2").unwrap();
+        writeln!(temp_edge_file, "1,3").unwrap();
+        writeln!(temp_edge_file, "2,3").unwrap();
+
+        let path = temp_edge_file.path().to_str().unwrap();
+
+        let graph = csv_to_hashmap(path).unwrap();
+        
+        let mut verified_graph = HashMap::new();
+        verified_graph.entry(1)
+            .or_insert_with(HashSet::new)
+            .extend([2, 3]);
+        verified_graph.entry(2)
+            .or_insert_with(HashSet::new)
+            .extend([1, 3]);
+        verified_graph.entry(3)
+            .or_insert_with(HashSet::new)
+            .extend([1, 2]);
+
+        assert_eq!(graph, verified_graph);
+    }   
+    #[test]
+    fn test_target_reading () {
+        let mut temp_edge_file = NamedTempFile::new().unwrap();
+        writeln!(temp_edge_file, "id,days,mature,views,partner,new_id").unwrap();
+        writeln!(temp_edge_file, "1,2,True,4,True,6").unwrap();
+        writeln!(temp_edge_file, "7,8,False,10,False,12").unwrap();
+
+        let path = temp_edge_file.path().to_str().unwrap();
+
+        let test_u32_cliques = vec![vec![6,12], vec![12,6]];
+
+        let test_vec = load_target_file_replace_u32_cliques(
+            path, 
+            test_u32_cliques).unwrap();
+        
+        let node1= NodeStats {
+            new_id: 6,
+            views: 4,
+            mature: true,
+            partner: true
+        };
+
+        let node2 = NodeStats {
+            new_id: 12,
+            views: 10,
+            mature: false,
+            partner: false
+        };
+
+        let verified_vec = vec![vec![node1, node2], vec![node2, node1]];
+
+        assert_eq!(test_vec, verified_vec);
+    }
 }
