@@ -119,7 +119,7 @@ use super::*;
         let mut checking_cliques: Vec<Vec<u32>> = Vec::new();
 
         run_bron_kerbosch(&r1, &mut p1, &mut x1, &graph, &mut my_cliques, 2);
-        copied_alg::bron_kerbosch_v2(&r2, &mut p2, &mut x2, &graph, &mut checking_cliques, 2);
+        copied_alg::tests::bron_kerbosch_v2(&r2, &mut p2, &mut x2, &graph, &mut checking_cliques, 2);
         
         println!("my_cliques: {:?}", my_cliques);
         println!("checking_cliques: {:?}", checking_cliques);
@@ -159,7 +159,7 @@ use super::*;
         let mut checking_cliques: Vec<Vec<u32>> = Vec::new();
 
         run_bron_kerbosch(&r1, &mut p1, &mut x1, &graph, &mut my_cliques, 5);
-        copied_alg::bron_kerbosch_v2(&r2, &mut p2, &mut x2, &graph, &mut checking_cliques, 5);
+        copied_alg::tests::bron_kerbosch_v2(&r2, &mut p2, &mut x2, &graph, &mut checking_cliques, 5);
 
         println!("my_cliques: {:?}", &my_cliques.len());
         println!("checking_cliques: {:?}", &checking_cliques.len());
