@@ -77,7 +77,7 @@ mod tests {
     use std::io::Write;
     use tempfile::NamedTempFile;
 
-    /// Test reading of the edge files using temporary files
+    /// Test reading of the edge files using a temporary file
     #[test]
     fn test_edge_reading () {
         let mut temp_edge_file = NamedTempFile::new().unwrap();
@@ -102,7 +102,8 @@ mod tests {
             .extend([1, 2]);
 
         assert_eq!(graph, verified_graph);
-    }   
+    }  
+    /// Test reading of the target files using a temporary file 
     #[test]
     fn test_target_reading () {
         let mut temp_edge_file = NamedTempFile::new().unwrap();
