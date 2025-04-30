@@ -95,7 +95,7 @@ use plotters::prelude::*;
 /// the use of a single .png may be unwise for high numbers of cliques
 pub fn plot_viewership_distributions (distributions: Vec<Vec<(u32, f32)>>) {
 
-    for (i, chunk) in distributions.chunks(16).enumerate() {
+    for (i, chunk) in distributions.chunks(16).enumerate() { // Seperate cliques into 16 vector chunks to ensure consistency across larger sizes
 
         let filename = format!("viewership_distribution_{}.png", i + 1);
         // Defines root_area for each page, to handle large amounts of cliques
