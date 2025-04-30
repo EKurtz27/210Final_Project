@@ -3,7 +3,7 @@
 use std::collections::{HashMap, HashSet};
 /// Runs the ['Bron-Kerbosch Algorithm'] \
 /// ### Inputs
-/// r: HashSet of node set currently being explored (initially empty) \
+/// r: HashSet of nodes in the clique currently being built (initially empty) \
 /// p: HashSet of possible nodes left to explore (initially all nodes) \
 /// x: HashSet of excluded nodes, that have already been processed (initially empty) \
 /// graph: HashMap of u32 keys and HashSet<u32> values, where the HashSet represents edges from the key to other nodes \

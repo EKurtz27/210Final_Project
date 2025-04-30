@@ -27,47 +27,7 @@ where
         _ => Err(serde::de::Error::unknown_variant(s, &["True", "False"])), // Handles error of non-bool value
     }
 }
-/// Once cliques are found using Bron_Kerbosch on u32 values (computationally faster),
-/// remake the cliques using NodeStats objects for further data analysis \
-///  # Example
-/// **Input:** vector of vectors containing u32s such as \[1, 2, 3\] \
-/// The target.csv file is loaded into a vector with Serde deserialization \
-/// For each node_id in the input vectors, this vector is referenced to find the matching NodeStruct \
-/// When matching node is found (new_id == number), add deserialized NodeStats to new vector\
-/// **Output:** vector of vector containing NodeStat objects such as \[NodeStat1, NodeStats2, NodeStats3\] \
-/// 
-/// **Note**  
-/// Code has large computational complexity due to nested loops, a large number of cliques may take significant time \
-/// Current code uses a min_value of 10 to get 14 cliques, for lower minimum values, this code may need to be optimized further \
-/// **Possible optimization (ran out of time):** collecting ids from target csv as a Vec<u32> with a reader, 
-/// then using that vec to find the row index for each clique node, and calling reader directly to that row. \
-/// Requires loading the bit offset to have the reader find specific rows, too technical at the moment
-pub fn u32_cliques_to_node_cliques(path: &str, cliques: Vec<Vec<u32>>) -> Result<Vec<Vec<NodeStats>>, csv::Error> {
-    let mut loaded_file: Vec<NodeStats> = Vec::new();
-    let mut index_rdr = csv::ReaderBuilder::new()
-        .has_headers(true)
-        .from_path(path)?;
-    for result in index_rdr.deserialize::<NodeStats>() {
-        match result {
-            Ok(record) => {
-                loaded_file.push(record)
-            }
-            Err(err) => eprintln!("Error deserializing csv: {}", err)
-        }
-    }
-    // Continue rework here
-    let mut node_cliques: Vec<Vec<NodeStats>> = Vec::new(); 
-    for clique in cliques {
-        let mut node_clique: Vec<NodeStats> = Vec::new();
-        for node_id in clique { 
-            if let Some(matching_node) = loaded_file.iter().find(|node| node.new_id == node_id) {
-                node_clique.push(matching_node.clone())
-            }            
-        }
-        node_cliques.push(node_clique) // Pushes a Vec<NodeStats> onto another vector
-    }
-    Ok(node_cliques)
-}
+
 /// Manipulates the views field of NodeStats to output each node's % of the clique's total viewership count \
 /// **Input**: vector of vectors containing NodeStats such as \[NodeStat1, NodeStats2, NodeStats3\] \
 /// Sums the views field for each vector \
@@ -95,13 +55,13 @@ fn test_distributions () {
         partner: false,
     };
     let node2 = NodeStats {
-        new_id: 1,
+        new_id: 2,
         views: 200,
         mature: true,
         partner: false,
     };
     let node3 = NodeStats {
-        new_id: 1,
+        new_id: 3,
         views: 300,
         mature: true,
         partner: false,
@@ -134,50 +94,54 @@ use plotters::prelude::*;
 /// While BitMap generation and area subdivison are handled dynamically by the number of cliques,
 /// the use of a single .png may be unwise for high numbers of cliques
 pub fn plot_viewership_distributions (distributions: Vec<Vec<(u32, f32)>>) {
-    
-    let num_cliques: f32 = distributions.len() as f32;
-    let mut sub_area_rows = num_cliques.sqrt().floor() as usize;
-    let sub_area_cols = num_cliques.sqrt().ceil() as usize;
-    if sub_area_rows * sub_area_cols < num_cliques as usize { //Ensures that there are enough slots for all clique graphs
-        sub_area_rows += 1
-    }
-     
-    let root_area = BitMapBackend::new("viewership_distributions.png"
-    , ((sub_area_cols * 500) as u32, (sub_area_rows as f32 * 500.0 * 0.75).floor() as u32)) // Defines root_area dynamically to handle changes in # of cliques
-    .into_drawing_area();
-    root_area.fill(&WHITE).unwrap();
 
-    let sub_areas = root_area.split_evenly((sub_area_rows, sub_area_cols)); // Divides root_area up into spaces for each bar chart
-    for ((idx, clique), area) in (1..).zip(distributions.iter()).zip(sub_areas) { // Create chart for each clique (each vector)
-        let node_names: Vec<u32> = clique.iter().map(|node| node.0).collect(); // Collects node ids from tuple
-        let y_values: Vec<f32> = clique.iter().map(|node| node.1).collect(); // Collects viewership % from tuple
-        let mut chart = ChartBuilder::on(&area)  // Generate chart context, taken from lecture notes
-            .caption(format!("Viewership Distribution for Clique {}", idx), ("Arial", 15).into_font())
-            .x_label_area_size(40)
-            .y_label_area_size(40)
-            .build_cartesian_2d((0..(node_names.len() - 1)).into_segmented(), 0f32..1f32).unwrap();
+    for (i, chunk) in distributions.chunks(16).enumerate() {
 
-        chart.configure_mesh() // Configure the chart labels and line thickness, referenced from lecture notes
-            .y_labels(10)
-            .y_label_formatter(&|y| format!("{}%", (*y * 100.0) as u32)) // Reformat y values as %s
-            .light_line_style(&TRANSPARENT)
-            .x_desc("Nodes in Clique")
-            .y_desc("% of Clique's Total Viewership")
-            .draw()
-            .unwrap();
+        let filename = format!("viewership_distribution_{}.png", i + 1);
+        // Defines root_area for each page, to handle large amounts of cliques
+        let root_area = BitMapBackend::new(&filename, (1024, 768)) 
+        .into_drawing_area();
+        root_area.fill(&WHITE).unwrap();
+
+        let mut sub_area_rows = (chunk.len() as f32).sqrt().floor() as usize;
+        let sub_area_cols = (chunk.len() as f32).sqrt().ceil() as usize;
+        if sub_area_rows * sub_area_cols < chunk.len() as usize { //Ensures that there are enough slots for all clique graphs
+            sub_area_rows += 1
+        }
         
-        chart.draw_series(node_names.iter().enumerate().map(|(i, &_node_id)| { // Draw the rectangles on the chart, referenced from the Plotters Developer's Guide
-            let x0 = SegmentValue::Exact(i);
-            let x1 = SegmentValue::Exact(i + 1);
-            Rectangle::new([(x0, 0f32), (x1, y_values[i])], RED.filled())
-        }))
-        .unwrap();
+        
 
-        chart
-            .configure_series_labels()
-            .background_style(&WHITE.mix(0.8))
-            .draw()
+        let sub_areas = root_area.split_evenly((sub_area_rows.min(4), sub_area_cols.min(4))); // Divides root_area up into at most 16 spaces for each bar chart
+        for ((idx, clique), area) in (1..).zip(chunk.iter()).zip(sub_areas) { // Create chart for each clique (each vector)
+            let node_names: Vec<u32> = clique.iter().map(|node| node.0).collect(); // Collects node ids from tuple
+            let y_values: Vec<f32> = clique.iter().map(|node| node.1).collect(); // Collects viewership % from tuple
+            let mut chart = ChartBuilder::on(&area)  // Generate chart context, taken from lecture notes
+                .caption(format!("Viewership Distribution for Clique {}", idx + (i * 16)), ("Arial", 15).into_font())
+                .x_label_area_size(40)
+                .y_label_area_size(40)
+                .build_cartesian_2d((0..(node_names.len() - 1)).into_segmented(), 0f32..1f32).unwrap();
+
+            chart.configure_mesh() // Configure the chart labels and line thickness, referenced from lecture notes
+                .y_labels(10) // Attempts at configuring x_labels to start at 1 instead of 0 have resulted in values at index 0 not being graphed
+                .y_label_formatter(&|y| format!("{}%", (*y * 100.0) as u32)) // Reformat y values as %s
+                .light_line_style(&TRANSPARENT)
+                .x_desc("Nodes in Clique")
+                .y_desc("% of Clique's Total Viewership")
+                .draw()
+                .unwrap();
+            
+            chart.draw_series(node_names.iter().enumerate().map(|(i, &_node_id)| { // Draw the rectangles on the chart, referenced from the Plotters Developer's Guide
+                let x0 = SegmentValue::Exact(i);
+                let x1 = SegmentValue::Exact(i + 1);
+                Rectangle::new([(x0, 0f32), (x1, y_values[i])], RED.filled())
+            }))
             .unwrap();
-    }
-    
+
+            chart
+                .configure_series_labels()
+                .background_style(&WHITE.mix(0.8))
+                .draw()
+                .unwrap();
+        }
+    }    
 }
