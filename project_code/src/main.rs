@@ -9,21 +9,21 @@ mod bron_kerbosch;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     
     let edge_file_options = vec![
-        "twitch_data/DE/musae_DE_edges.csv",
-        "twitch_data/ENGB/musae_ENGB_edges.csv",
-        "twitch_data/ES/musae_ES_edges.csv",
-        "twitch_data/FR/musae_FR_edges.csv",
-        "twitch_data/PTBR/musae_PTBR_edges.csv",
-        "twitch_data/RU/musae_RU_edges.csv"
+        "../twitch_data/DE/musae_DE_edges.csv",
+        "../twitch_data/ENGB/musae_ENGB_edges.csv",
+        "../twitch_data/ES/musae_ES_edges.csv",
+        "../twitch_data/FR/musae_FR_edges.csv",
+        "../twitch_data/PTBR/musae_PTBR_edges.csv",
+        "../twitch_data/RU/musae_RU_edges.csv"
     ];
     
     let target_file_options = vec![
-        "twitch_data/DE/musae_DE_target.csv",
-        "twitch_data/ENGB/musae_ENGB_target.csv",
-        "twitch_data/ES/musae_ES_target.csv",
-        "twitch_data/FR/musae_FR_target.csv",
-        "twitch_data/PTBR/musae_PTBR_target.csv",
-        "twitch_data/RU/musae_RU_target.csv"
+        "../twitch_data/DE/musae_DE_target.csv",
+        "../twitch_data/ENGB/musae_ENGB_target.csv",
+        "../twitch_data/ES/musae_ES_target.csv",
+        "../twitch_data/FR/musae_FR_target.csv",
+        "../twitch_data/PTBR/musae_PTBR_target.csv",
+        "../twitch_data/RU/musae_RU_target.csv"
     ];
     // Input for setting region/language
     let mut input = String::new();
